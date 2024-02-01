@@ -1,0 +1,9 @@
+- SGD 학습 멈추면 -> local minima -> '모멘텀'
+
+- Negative Sampling?
+	- Word2Vec의 CBOW와 Skip-gram 모두 단어 개수가 	많아질수록 계산 복잡도가 증가하여 연산 속도가 저하된다는 한계점을 보완하기 위해 제안
+ 	- Negative Sampling은 전체 문장에서 자주 사용되는 단어에 높은 가중치를 부여하고, 우선적으로 해당 단어를 선별
+	- 학습 데이터셋이 작을 때는 5~20개 사이의 Negative sample을 추출하는 게 효과적이고, 학습 데이터셋이 클 경우 2~5개 사이의 sample을 선정하는 게 효과적
+	- Skip-gram with Negative Sampling(SGNS)
+
+
