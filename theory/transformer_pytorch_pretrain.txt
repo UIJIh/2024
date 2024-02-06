@@ -1,0 +1,89 @@
+LM? 이전의 문맥을 바탕으로 현재 시점의 단어에 대한 확률 분포를 모델링하는 것이다. 즉, 주어진 텍스트로부터 이전 단어들로부터 다음 단어를 예측하도록 학습한다.
+input sequence 길이가 길면, 시퀀스 초반의 정보가 후반 time step의 hidden state를 도출하는데까지 전달되기 어려움 / gradient 1보다 작으면..vashing
+
+*** 
+x_np = torch.from_numpy(np_arr) / ones_like(x_data) / rand(1,2) / torch.Tensor 의 기본 유형은 torch.FloatTensor(torch.float32)
+
+(60000, 28, 28) / (10000, 28, 28) 10개 레이블 값
+
+분류를 하는 딥러닝에서는 확률화되지 않은 예측 결과를 logit
+
+데이터&데이터로더 -> NN -> Pytorch의 Autograd를 이용하여 loss에 대한 gradient 계산 및 역전파
+>>optimizer.zero_grad() # 그래디언트 초기화
+>>loss.backward() # 역전파 여기서 계산
+-> 업데이트
+>>optimizer.step()
+>>(optimizer = torch.optim.SGD(model.parameters(), lr=0.1))
+
+loss는 
+>>criterion = nn.CrossEntropyLoss() ...
+>>loss = criterion(outputs, target)
+
+(pred)outputs = model(inputs)
+
+torch.no_grad → test 단계에서는 parameter 업데이트 없이 성능만 평가하기에
+
+최종
+>>for t in range(epochs): 
+>>    train_loop(train_dataloader, model, loss_fn, optimizer)
+>>    test_loop(test_dataloader, model, loss_fn)
+
+torch.save(model, 'model.pth')
+model = torch.load('model.pth')
+
+device = 'cuda' / .to(device) / 신경망의 모든 파라미터를 GPU로 전송 >> net.to("cuda:0")
+
+test 때 model.eval하면 필요없는거(dropout등) 다 꺼짐 / model.train하면 다시 켜짐
+
+nn.Linear : 선형 계층 은 저장된 가중치(weight)와 편향(bias)을 사용하여 입력에 선형 변환(linear transformation)을 적용하는 모듈입니다.
+
+***
+pretrain : "대규모 언어 데이터 셋"으로 / downstream task : finetuning 되는 과정
+초기에는 pretrain된 임베딩으로 문맥 정보 추가 학습 -> 모델 전체를 pretraining (부족한 training data와 랜덤하게 초기화되는 가중치가 문제) : (Masked)문장 일부 변형해서 단어 예측하도록\
+-> COMMON SENCE가 생긴다!!
+COT? '문제-답’ 대신에 ‘문제-풀이-답’ 형태
+
+GPT1 : finetuning 전이학습X, 모델층하나 더 쌓지 않음. 목표 task에 맞게 input을 ordered sequence로 변형함. order 관계가 필요 없는 task들에 대해 input을 order 형으로 변형 (보통 구분자) / 3 - meta
+BERT : finetuning 때 Mask 토큰 안나타나서 일정비율로15%,811/ NSP:[SEP] 5:5 / finetuning시 적은수파라미터(!=gpt), 특정 작업에 맞도록 출력 Layer를 추가 구성(classify하고 싶은 갯수에 따라 classification layer)
+RoBERTa : 학습데이터 더 많고 시퀀스 더 길어지고, NSP제거
+T5 : 임의 길이의 연속단어span 선택후 가리거나 삭제 -> 디코더출력시예측 / Text-to-Text Transfer Transformer: 모든 텍스트 처리 문제를 “text-to-text” 문제로 취급, 즉, 텍스트를 입력으로 취급하고 새로운 텍스트를 생성하는 것을 출력으로 취급(클래스 레이블이나 입력 범위만 출력할 수 있는 BERT, vector)
+
+Transformer (attention 순차x, 병렬)
+encoder - context를 제대로 생성(문장의 정보들을 빠뜨리지 않고 압축)해내는 것을 목표
+decoder - context를 input으로 받아 sentence를 output으로 생성 & Ground Truth sentence에 내부에서의 Attention
+Position-wise Feed-Forward Networks
+
+Query: 현재 시점의 token을 의미
+Key: attention을 구하고자 하는 대상 token을 의미
+Value: attention을 구하고자 하는 대상 token을 의미 (Key와 동일한 token)
+>> Query는 고정되어 하나의 token을 가리키고, Query와 가장 부합하는(Attention이 가장 높은) token을 찾기 위해서 Key, Value를 문장의 처음부터 끝까지 탐색시키는 것
+>> input으로 들어오는 token embedding vector를 fully connected layer에 넣어 세 vector를 생성해낸다. 세 vector를 생성해내는 FC layer는 모두 다르기 때문에, 결국 self-attention에서는 Query, Key, Value를 구하기 위해 3개의 서로 다른 FC layer가 존재한다. 
+
+Q * (모든)K, att_score -> softmax, att_prob -> * V : 관련있는단어살리고 -> att_val 이거 다 더해
+
+pad token들에 대해 attention이 부여되지 않도록 처리하는 것이 pad masking
+multihead : Scaled Dot Attention을 한 Encoder Layer마다 1회씩 수행하는 것이 아니라 병렬적으로 h회 각각 수행한 뒤, 그 결과를 종합 (batch_size, n_seq, n_head * d_head) / "다른 시각"으로!!! 정보 수집
+scale : softmax연산 영향주지 않을라고
+Position-wise Feed-Forward Networks : position마다, 즉 개별 단어마다 적용되기 때문에 position-wise, 두 번의 linear transformation과 activation function ReLU(활성화 : 입력신호->출력신호 변환)
+
+단어 임베딩 벡터(단어 임베딩+위치 임베딩)가 -> 1. 멀티헤드어텐션 -> 2. Residual Network를 거쳐 원래 input과 멀티헤드어텐션의 합이 출력(add&normal) -> 3. 포인트와이즈 피드포워드 네트워크 를 거치고, -> 4. Residual Network를 거쳐서 원래의 인풋과 포인트와이즈 피드포워드 네트워크의 합
+
+1. MASKED!!!! Multi-Head Self-Attention을 수행합니다. (줄: 16) Q, K, V 모두 동일한 값을 사용하는 self-attention 입니다. -> t 시점에서 정확히 예측하고자 하기 때문에 전체 정보를 미리 알려주는 것이 아니라 순차적으로 데이터를 제공하며 유추하기를 원하기 때문에 Mask를 사용하여 순서가 되지 않은 데이터의 정보(Attention)를 숨기는 과정
+2. 1번의 결과와 input(residual)을 더한 후 LayerNorm을 실행 합니다. (줄: 17) 
+3. Encoder-Decoder Multi-Head Attention을 수행합니다. (줄: 19) 
+>>만약 영한 번역을 수행하고자 한다면, Encoder의 input은 영어 sentence일 것이고, Encoder가 도출해낸 context는 영어에 대한 context일 것이다. Decoder의 input(teacher forcing)과 output은 한글 sentence일 것이다. 따라서 이 경우에는 Query가 한글, Key와 Value는 영어가 되어야 한다.
+>> Q: 2번의 결과
+>> K, V: Encoder 결과(context)
+4. 3번의 결과와 2번의 결과(residual)을 더한 후 LayerNorm을 실행 합니다. (줄: 20)
+5. 4번의 결과를 입력으로 Feed Forward를 실행 합니다. (줄: 22)
+6. 5번의 결과와 4번의 결과(residual)을 더한 후 LayerNorm을 실행 합니다. (줄: 23)
+
+Transformer의 추론 과정에는 Encoder stack에 전달되는 입력 시퀀스만 있고 Decoder stack에 입력할 타겟 시퀀스없이 출력 시퀀스를 생성하는 것이 목표이다.
+<SOS>넣어줌
+좋은 "Query"!!!!!를 만들어내는 것도 Transformer 학습의 중요한 과정이다. 결국 핵심은 좋은 Embedding을 만들어내는 것이다!
+Self-Attention은 결과적으로 Embedding을 더욱 강화시키는 벡터를 만드는 과정이고 좋은 Embedding 결과가 Feed Forward 구조와 더해지며
+
+Decoder의 output이 그대로 Transformer의 최종 output이 되는 것은 아니다. Decoder의 output shape는 n_batch×seq_len×d_embed인데, 우리가 원하는 output은 target sentence인 n_batch×seq_len이기 때문이다. 즉, Embedding이 아닌 실제 target vocab에서의 token sequence를 원하는 것이다. 이를 위해 추가적인 FC layer를 거쳐간다. 이 layer를 대개 Generator라고 부른다.
+Generator가 하는 일은 Decoder output의 마지막 dimension을 d_embed에서 len(vocab)으로 변경
+
+https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FmtSQo%2FbtqMqeq27wQ%2F5QyWfnLpskrWctW7KvSRO0%2Fimg.png
