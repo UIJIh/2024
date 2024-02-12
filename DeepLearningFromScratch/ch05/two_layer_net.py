@@ -6,7 +6,6 @@ from common.layers import *
 from common.gradient import numerical_gradient
 from collections import OrderedDict
 
-
 class TwoLayerNet:
 
     def __init__(self, input_size, hidden_size, output_size, weight_init_std = 0.01):
@@ -44,17 +43,17 @@ class TwoLayerNet:
         accuracy = np.sum(y == t) / float(x.shape[0])
         return accuracy
         
-    # x : 입력 데이터, t : 정답 레이블
-    def numerical_gradient(self, x, t):
-        loss_W = lambda W: self.loss(x, t)
+    # # x : 입력 데이터, t : 정답 레이블
+    # def numerical_gradient(self, x, t):
+    #     loss_W = lambda W: self.loss(x, t)
         
-        grads = {}
-        grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
-        grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
-        grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
-        grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
+    #     grads = {}
+    #     grads['W1'] = numerical_gradient(loss_W, self.params['W1'])
+    #     grads['b1'] = numerical_gradient(loss_W, self.params['b1'])
+    #     grads['W2'] = numerical_gradient(loss_W, self.params['W2'])
+    #     grads['b2'] = numerical_gradient(loss_W, self.params['b2'])
         
-        return grads
+    #     return grads
         
     def gradient(self, x, t):
         # forward

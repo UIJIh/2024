@@ -21,7 +21,7 @@ class MultiLayerNet:
         'sigmoid'나 'xavier'로 지정하면 'Xavier 초깃값'으로 설정
     weight_decay_lambda : 가중치 감소(L2 법칙)의 세기
     """
-    def __init__(self, input_size, hidden_size_list, output_size,
+    def __init__(self, input_size, hidden_size_list, output_size,   
                  activation='relu', weight_init_std='relu', weight_decay_lambda=0):
         self.input_size = input_size
         self.output_size = output_size
@@ -34,12 +34,12 @@ class MultiLayerNet:
         self.__init_weight(weight_init_std)
 
         # 계층 생성
-        activation_layer = {'sigmoid': Sigmoid, 'relu': Relu}
+        activation_layer = {'sigmoid': Sigmoid(), 'relu': Relu()}
         self.layers = OrderedDict()
         for idx in range(1, self.hidden_layer_num+1):
             self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)],
                                                       self.params['b' + str(idx)])
-            self.layers['Activation_function' + str(idx)] = activation_layer[activation]()
+            self.layers['Activation_function' + str(idx)] = activation_layer[activation]
 
         idx = self.hidden_layer_num + 1
         self.layers['Affine' + str(idx)] = Affine(self.params['W' + str(idx)],
