@@ -1,0 +1,111 @@
+git config --global user.email/user.name "***"
+git init -> .git folder
+
+git remote add origin [원격 저장소 위치]
+git remote remove origin
+
+clone 
+add(untracked->unmodified) / (status) / commit(staged->unmodified) 
+ 
+git log : 히스토리(vorher) 시간순 조회-최근커밋
+git log -stat : 각 커밋의 통계 정보를 조회;어떤 파일이 수정됐는지, 얼마나 많은 파일이 변경됐는지, 또 얼마나 많은 라인을 추가하거나 삭제했는지
+git log -p -숫자 : 최근 몇 개의 커밋을 본다
+git log 파일명 : 파일명의 커밋을 본다.
+
+push [원격 저장소-github] [브랜치]
+
+git pull [원격 저장소] [브랜치]
+
+# git branch란? 포인터 같네..
+이전 코드와 비교를 위해 여러 코드를 복사해야 하는 일이 자주 있습니다.
+Git의 브랜치를 활용하면, 코드를 통째로 복사한 후, 원래 코드에 영향을 주지않고 독립적으로 개발할 수 있습니다.
+주로 여러명이 동시에 작업할 때, 다른 사람에게 영향을 주거나 받지 않기 위해, 팀 프로젝트에서 많이 활용되고 있습니다.
+
+git checkout branchName : switch to the other branch
+
+
+***
+
+
+GPT2 PAPER "Unsupervised Multitask Learners"
+- 제로샷러닝 : no example! no gradient updates! -> sequence들의 확률을 비교
+- in-context learning, LM!! 크기 커지면서 파인튜닝 비싸다!!
+- 매번 target task에 맞춰 대용량의 데이터를 확보하는 것 역시 마찬가지
+- scaling law "왜 모델이 점점 커지지?"
+	 : 큰 모델은 데이터 대비 학습 효과가 좋다(Test Loss 기준).
+	: 컴퓨팅 예산을 고정할 때, 데이터를 더 확보하기보다는 모델을 더 키우는 쪽
+	: 모델 크기에 따른 필요 데이터 수 제시
+
+## <Introduction>
+가장 성능이 높은 언어처리 모델은 pre-training과 supervised fine-tuning 결합으로 만들어졌다. 이 접근법은 transfer과 더불어 긴 역사를 가졌다.
+이러한 방법들은 여전히 지도 학습을 필요로 한다. 만약 **supervised 데이터가 최소한으로 또는 전혀 필요하지 않다면, 일반상식 추론이나 감정분석**과 같은 특정 과제들을 수행하는 데 큰 발전이 있을 것이다.
+
+### **Training dataset**
+많은 선행연구에서 사용된 dataset은 뉴스, Wikipedia, 소설책과 같이 한 영역에서만 가져온 데이터로 구성되어 있었다. 이 논문에서는 **여러 도메인에 적용**이 가능하도록 다양한 출처로부터 가져오려고 하였다.
+bookcorpus -> webtext(고품질만)
+
+## <**Conclusion>**
+이는 충분히 다양한 test corpus로 training 된 고용량 모델이 Zero-shot setting에서 수행할 수 있는 작업의 다양성이 Language model이 명시적인 지도**explicit supervision 없이도** 놀라운 양의 작업을 수행하는 방법을 배우기 시작함을 보여준
+
+LAMBADA는 (Paperno et al., 2016) Language Model을 평가하기 위한 데이터셋이다. 텍스트 내 긴 문장에 대한 의존성을 테스트하기 위해 문장의 마지막 단어를 예측하는 것을 목표로 한다.
+Perplexity (PPL, 표본 값의 불확실성) : 테스트 데이터셋이 충분히 신뢰할 만할 때 Perplexity 값이 낮을수록 언어 모델이 우수하다고 평가
+
+TL;DR: 토근 이후의 summary 생성 → ‘Prompting’ 개념의 출발
+
+
+## few shot?
+: task에서 특정 예시를 예측하기 전에 그와 관련된 다른 예시들을 미리 제공하는 것
+: In-context Learning, new task를 학습할 때 gradient updates가 없음
+
+Few-shot, Fine-tuned BERT Large를 뛰어넘는 모습
+
+
+## COT?
+: multi-step reasoning 어려움
+: 문제를 풀이하는 과정을 예제로 넣었더니, 정답으로 귀결
+(LLM은 시퀀스 기반으로 빈칸 채우듯이 문장을 생성하는 특징이 있다보니,
+이러한 특징을 살려서 중간 과정을 단계별로 풀이했을 때, 그 성능이 좋아진 것이 아니었을까 생각이 듭니다.)
+
+### 제로 샷 CoT : inference가 두번 일어난다, 2-stage 프롬프팅!
+- 1단계에서는 trigger sentence를 통해 답변을 추론(llm)하도록 합니다.
+- 2단계에서는 모델이 추론된 답변으로부터 최종 답변 z를 추출하도록 합니다. 원래 + 1차 llm 결과
+
+
+## Instruction finetuning : object function이 align하지 않다!! (제로샷 향상)
+- next token prediction이라 우리의 의도가 안담김, unseen task에 대한 추론 능력 향상시켜야 함
+- 원래는 not many label에 대해 fine tuning이었지만 이제는 many -> 많은 task adapt 가능하도록
+
+### Introduction
+GPT3와 같은 모델들은 few-shot 성능이 (기대보다)뛰어나다는 특징이 있는 반면, zero-shot에 대해서는 성능이 낮다. 
+FLAN은 자연어 instruction과 one-shot example을 데이터셋으로 구성하여 fine-tuning 시켜(Instruction Tuning) unseen task에 대한 zero-sho 성능을 높인 연구이다.
+
+### Tasks & Templates
+먼저 (instruction + example) 데이터셋을 마련하기 위해서 저자들은 60여개의 NLP dataset을 다시 군집화하여 12개의 클러스터를 구성하였다.
+이후 각 dataset(task)별로 10개의 template을 만들고, 원래의 dataset을 template에 채워넣는 방식으로 자연어 instruction으로 구성된 fine-tuning 데이터셋을 만들었다.
+
+Whereas supervised fine-tuning trains models on input examples and their corresponding outputs(each specific tasks), instruction tuning augments "input-output" examples with instructions(자연어 ins-), which enables instruction-tuned models to generalize more easily to "new tasks".(unseen)
+
+(벤치마크 = 비교평가, 성능 평가 점수 냄)
+
+그럼에도 불구하고 'Mismatch between LM objective and human preferences’ 
+(open-ended에는 정답이 없지, entropy)
+Collecting demonstrations for so many tasks is expensive
+Problem 1: tasks like open-ended creative generation have no right answer.
+Problem 2: language modeling penalizes all token-level mistakes equally, but some errors are worse than others.
+
+
+***
+
+expected reward를 maximize하는 게 우리의 목표
+근데 reward function이 미분 가능하지 않다면? -> 최적화 기법 policy gradient 사용한다!
+-> gradient의 선형성 덕분에 gradient 연산자를 Σ 안으로 집어 넣을 수 있다. (expectation 안)
+-> 즉, reward가 full-sentence에 대해 적용 가능
+-> Reward가 매우 크고 긍정적이라면, 그 sample의 gradient를 큰 수로 곱하여 같은 sample을 다시 생산할 확률을 극대화하는 방향으로 gradient step 밟으려고 할 것이다. 
+-> expected reward를 얻도록
+->미분 불가능한 reward function R(s)에 대해 LM이 최대한의 expected reward 얻도록 훈련시킬 수 있다.
+
+KL페널티 - pre-trained 모델에서 벗어나지 않도록
+
+인간의 선호도는 항상 일관되지 않는다. 사용자의 선호도를 단순히 숫자화 하기에 보상을 사용자의 의도에 따라 얻는 것이 아닌 다른 방식으로 얻는 문제가 생길 수 있다.
+이를 'Reward hacking'이라고도 한다.
+Halluncinations
