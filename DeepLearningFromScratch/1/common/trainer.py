@@ -3,6 +3,7 @@ import sys, os
 sys.path.append(os.pardir)  # 부모 디렉터리의 파일을 가져올 수 있도록 설정
 import numpy as np
 from common.optimizer import *
+import time
 
 class Trainer:
     """신경망 훈련을 대신 해주는 클래스
@@ -67,12 +68,14 @@ class Trainer:
         self.current_iter += 1
 
     def train(self):
+        start = time.time()
         for i in range(self.max_iter):
             self.train_step()
-
+        end = time.time()
+        print(f'걸린 시간 : {end-start}')
         test_acc = self.network.accuracy(self.x_test, self.t_test)
 
         if self.verbose:
             print("=============== Final Test Accuracy ===============")
             print("test acc:" + str(test_acc))
-
+      

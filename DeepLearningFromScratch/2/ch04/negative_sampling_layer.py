@@ -41,7 +41,7 @@ class UnigramSampler:
             counts[word_id] += 1
 
         vocab_size = len(counts)
-        self.vocab_size = vocab_size
+        self.vocab_size = vocab_size 
 
         self.word_p = np.zeros(vocab_size)
         for i in range(vocab_size):
@@ -60,7 +60,7 @@ class UnigramSampler:
                 p = self.word_p.copy()
                 target_idx = target[i]
                 p[target_idx] = 0
-                p /= p.sum()
+                p /= p.sum() # target 없애고 한번 더 normalization
                 negative_sample[i, :] = np.random.choice(self.vocab_size, size=self.sample_size, replace=False, p=p)
         else:
             # GPU(cupy）로 계산할 때는 속도를 우선한다.

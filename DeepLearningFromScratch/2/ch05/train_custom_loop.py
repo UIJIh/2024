@@ -19,8 +19,8 @@ max_epoch = 100
 # 학습 데이터 읽기(전체 중 1000개만)
 corpus, word_to_id, id_to_word = ptb.load_data('train')
 corpus_size = 1000
-corpus = corpus[:corpus_size]
-vocab_size = int(max(corpus) + 1)
+corpus = corpus[:corpus_size] # 전체 중 1000개만
+vocab_size = int(max(corpus) + 1) # index는 0부터시작하니까, size는1~개수
 
 xs = corpus[:-1]  # 입력
 ts = corpus[1:]   # 출력(정답 레이블)

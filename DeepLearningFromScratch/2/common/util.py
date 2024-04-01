@@ -227,19 +227,19 @@ def eval_perplexity(model, corpus, batch_size=10, time_size=35):
 
 
 def eval_seq2seq(model, question, correct, id_to_char,
-                 verbos=False, is_reverse=False):
-    correct = correct.flatten()
+                 verbose=False, is_reverse=False):
+    correct = correct.flatten() # 정답(배치,5)
     # 머릿글자
     start_id = correct[0]
     correct = correct[1:]
-    guess = model.generate(question, start_id, len(correct))
+    guess = model.generate(question, start_id, len(correct)) # list[]
 
     # 문자열로 변환
     question = ''.join([id_to_char[int(c)] for c in question.flatten()])
     correct = ''.join([id_to_char[int(c)] for c in correct])
     guess = ''.join([id_to_char[int(c)] for c in guess])
 
-    if verbos:
+    if verbose:
         if is_reverse:
             question = question[::-1]
 
@@ -293,10 +293,10 @@ def analogy(a, b, c, word_to_id, id_to_word, word_matrix, top=5, answer=None):
             return
 
 
-def normalize(x):
+def normalize(x): # 벡터의 크기로 나눠서 단위벡터해서 방향만 남도록 -> 비교 가능
     if x.ndim == 2:
-        s = np.sqrt((x * x).sum(1))
-        x /= s.reshape((s.shape[0], 1))
+        s = np.sqrt((x * x).sum(1)) # row의 element 제곱합 후 루트 (([[1, 2, 3], [4, 5, 6]])
+        x /= s.reshape((s.shape[0], 1)) # 2차원으로 바꿔줌 원래는 s.shape = (x.row,)
     elif x.ndim == 1:
         s = np.sqrt((x * x).sum())
         x /= s

@@ -11,6 +11,16 @@ def relu(x):
 
 
 def softmax(x):
+    '''
+    - 2차원 입력의 경우:
+    먼저, 각 행에서 최대값을 빼줍니다(x - x.max(axis=1, keepdims=True)). 이는 수치적으로 안정된 소프트맥스 계산을 위한 기법으로, 오버플로우를 방지합니다.
+    그 다음, np.exp(x)를 사용하여 각 요소의 지수 값을 계산합니다.
+    마지막으로, 각 행의 합으로 각 요소를 나누어 정규화합니다(x /= x.sum(axis=1, keepdims=True)).
+
+    - 1차원 입력의 경우:
+    최대값을 빼줍니다(x - np.max(x)). 이는 2차원 입력의 경우와 마찬가지로 수치적 안정성을 위함입니다.
+    np.exp(x)를 사용하여 지수 값을 계산하고, 이를 전체 합으로 나누어 정규화합니다(np.exp(x) / np.sum(np.exp(x))).
+    '''
     if x.ndim == 2:
         x = x - x.max(axis=1, keepdims=True)
         x = np.exp(x)

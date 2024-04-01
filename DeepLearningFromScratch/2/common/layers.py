@@ -115,10 +115,10 @@ class SigmoidWithLoss:
 
     def forward(self, x, t):
         self.t = t
-        self.y = 1 / (1 + np.exp(-x))
-
+        self.y = 1 / (1 + np.exp(-x)) # 확률
+                                            # 확률 벡터(합이1-(NO,YES)) 이진분류
         self.loss = cross_entropy_error(np.c_[1 - self.y, self.y], self.t)
-
+                                      # col 방향으로, 첫col에 1-y, 두번째col에 y
         return self.loss
 
     def backward(self, dout=1):
@@ -141,7 +141,7 @@ class Dropout:
         if train_flg:
             self.mask = np.random.rand(*x.shape) > self.dropout_ratio
             return x * self.mask
-        else:
+        else: # test 일 때 : scale을 학습 시와 맞춰주기 위하여, 비활성화 뉴런 빼준다.
             return x * (1.0 - self.dropout_ratio)
 
     def backward(self, dout):

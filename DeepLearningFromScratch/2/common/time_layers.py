@@ -129,12 +129,12 @@ class LSTM:
         self.cache = (x, h_prev, c_prev, i, f, g, o, c_next)
         return h_next, c_next
 
-    def backward(self, dh_next, dc_next):
+    def backward(self, dh_next, dc_next): # 나가는거 3개였음(h_t,c_t,hs)
         Wx, Wh, b = self.params
         x, h_prev, c_prev, i, f, g, o, c_next = self.cache
-
+        # 1. cell state가 tanh 통과
         tanh_c_next = np.tanh(c_next)
-
+        # 2. 위에서 흘러옴
         ds = dc_next + (dh_next * o) * (1 - tanh_c_next ** 2)
 
         dc_prev = ds * f
@@ -272,7 +272,7 @@ class TimeAffine:
         rx = x.reshape(N*T, -1)
         out = np.dot(rx, W) + b
         self.x = x
-        return out.reshape(N, T, -1)
+        return out.reshape(N, T, -1) # (N,T,V)
 
     def backward(self, dout):
         x = self.x
@@ -297,45 +297,48 @@ class TimeSoftmaxWithLoss:
     def __init__(self):
         self.params, self.grads = [], []
         self.cache = None
-        self.ignore_label = -1
+        self.ignore_label = -1 # label은 0/1 (0이상정수)
 
     def forward(self, xs, ts):
         N, T, V = xs.shape
 
         if ts.ndim == 3:  # 정답 레이블이 원핫 벡터인 경우
-            ts = ts.argmax(axis=2)
+            ts = ts.argmax(axis=2) # V
 
-        mask = (ts != self.ignore_label)
+        mask = (ts != self.ignore_label) # 모두, 다른값 집어넣으면 무시가능! (패딩값 등)
+        # boolean (비교 후 true/false)
 
-        # 배치용과 시계열용을 정리(reshape)
+        # 배치용과 시계열용을 정리(2d로)
         xs = xs.reshape(N * T, V)
-        ts = ts.reshape(N * T)
-        mask = mask.reshape(N * T)
+        ts = ts.reshape(N * T) # flatten >> 벡터
+        mask = mask.reshape(N * T) # 마찬가지
 
-        ys = softmax(xs)
-        ls = np.log(ys[np.arange(N * T), ts])
-        ls *= mask  # ignore_label에 해당하는 데이터는 손실을 0으로 설정
+        ys = softmax(xs) # normalization >> 확률분포!
+        ls = np.log(ys[np.arange(N * T), ts]) # [n*T차원 벡터2개]
+                    # slicing 0~N*T까지 ts 해당 인덱스에 있는 값 뽑아내기
+        ls *= mask  # ignore_label에 해당하는 데이터는 손실을 0으로 죽음!
         loss = -np.sum(ls)
-        loss /= mask.sum()
+        loss /= mask.sum() # true 개수로 나눠줌
 
         self.cache = (ts, ys, mask, (N, T, V))
         return loss
 
     def backward(self, dout=1):
         ts, ys, mask, (N, T, V) = self.cache
-
-        dx = ys
-        dx[np.arange(N * T), ts] -= 1
+        # y - t
+        dx = ys  # ys = softmax 값
+        dx[np.arange(N * T), ts] -= 1 # y - t        
         dx *= dout
-        dx /= mask.sum()
-        dx *= mask[:, np.newaxis]  # ignore_labelㅇㅔ 해당하는 데이터는 기울기를 0으로 설정
+        dx /= mask.sum() # 1/T 한거
+        # 벡터에 축을 하나 더 만들어서 matrix를 만들어줌
+        dx *= mask[:, np.newaxis]  # ignore_label에 해당하는 데이터는 기울기를 0으로 설정
 
         dx = dx.reshape((N, T, V))
 
         return dx
 
 
-class TimeDropout:
+class TimeDropout: # 매 학습마다, 앙상블 효과
     def __init__(self, dropout_ratio=0.5):
         self.params, self.grads = [], []
         self.dropout_ratio = dropout_ratio
@@ -344,12 +347,17 @@ class TimeDropout:
 
     def forward(self, xs):
         if self.train_flg:
-            flg = np.random.rand(*xs.shape) > self.dropout_ratio
+            # 1. random.rand 0~1 균일 분포 ~ 무작위 수 생성
+            # 2. 이 중에서 비율보다 큰지 비교하여 boolean
+            flg = np.random.rand(*xs.shape) > self.dropout_ratio 
             scale = 1 / (1.0 - self.dropout_ratio)
+            # 1. boolean mask를 실수형으로 바꾼다.
+            # 2. 비율이 0.5면, 스케일 비율은 2로, 출력을 2배로 증가 (드롭뉴런엔 영향x)
+            # p가 1 이상일 경우의 error를 피하기 위해서 & test 시 출력이 더 커짐, 1보다 더 큰 값 곱해줌
             self.mask = flg.astype(np.float32) * scale
 
             return xs * self.mask
-        else:
+        else: # test 시 그대로
             return xs
 
     def backward(self, dout):

@@ -40,8 +40,8 @@ def load_data(file_name='addition.txt', seed=1984):
         _update_vocab(a)
 
     # 넘파이 배열 생성
-    x = numpy.zeros((len(questions), len(questions[0])), dtype=numpy.int)
-    t = numpy.zeros((len(questions), len(answers[0])), dtype=numpy.int)
+    x = numpy.zeros((len(questions), len(questions[0])), dtype=int)
+    t = numpy.zeros((len(questions), len(answers[0])), dtype=int)
 
     for i, sentence in enumerate(questions):
         x[i] = [char_to_id[c] for c in list(sentence)]
@@ -66,3 +66,17 @@ def load_data(file_name='addition.txt', seed=1984):
 
 def get_vocab():
     return char_to_id, id_to_char
+
+
+# (x_train, t_train), (x_test, t_test) = \
+#     load_data('addition.txt', seed=1984)
+# char_to_id, id_to_char = get_vocab()
+
+# # 입력 : 0~999 사이 숫자 2개
+# # 출력 : 구분자포함(_) 5글자 고정 (최대 999+999=1998)
+# # 구분자는 Decoder에 문자열을 생성하라고 알리는 신호로 사용 & 출력 문자 수 고정
+# print(x_train.shape, t_train.shape) # 문자 ID 
+# print(x_test.shape, t_test.shape)  
+
+# print(x_train[0])
+# print(t_train[0])
