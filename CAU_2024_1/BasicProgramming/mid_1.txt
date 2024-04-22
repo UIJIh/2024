@@ -1,0 +1,122 @@
+new = [sen.strip() for sen in new if sen.strip()]
+
+.count('') >> string & list에서도 가능
+.find('')  >> list에서 안되고 없으면 -1 반환
+.index('')
+.capitalize() >> 처음대문자, 영원히 바꾸지는 않음
+.swapcase()
+capitalized format = title()
+.strip()   >> 영원히 바꾸지 않음
+.removeprefix()
+
+def findX(a, b, c):
+    discriminate = (b**2) - (4*a*c)
+    if discriminate > 0:
+        val_1 = (-b + (discriminate**0.5)) / (2*a)
+        val_2 = (-b - (discriminate**0.5)) / (2*a)
+        return val_1, val_2
+    elif discriminate == 0:
+        val_1 = -b / (2*a)
+        return val_1
+    else:
+        return None
+
+def convert(i):
+    to_b = format(i, '#b')
+    to_oct = format(i, '#o')
+    to_hex = format(i, '#x')
+    return to_b, to_oct, to_hex
+
+hex(val)
+oct(val)
+bin(va)
+
+"""
+import this
+augumented assignment += *=
+round(quotient) >> rounding half to even
+"""
+
+def changeValue(l):
+    new = []
+    s = []
+    
+    for element in l:
+        if isinstance(element, int):
+            new.append(element * 2)
+        else:
+            new.append(element)
+            s.append(element)
+    s = ' '.join(s)
+    new *= 2
+    return new.append(s) >>>>>>>> None 이다!!! 저걸 변수에 할당하고 return으로 받아도 None!!
+				>>>>>>>>> new_list.append(new_str)
+    						     return new_list
+
+.insert(index, value)
+del statement >> index 이용해서!! list[idx]
+.remove(element) >> 첫번째 나타난 element 명시!!
+.sort(reverse=True) >> 알파벳!!!, 영원히
+.reverse() >> 알파벳 아니고 그냥 order 영원히
+sorted(list) >> 영원히 바꾸지 않음
+print(sorted(scores)[::-1])
+print(sorted(scores, reverse=True))
+print(scores[::-1])
+
+reversed = ids.reverse() # None
+print(reversed) # None
+sorted = ids.sort() # None
+print(sorted)# None
+
+reversed(리스트) >>> 이터레이터 반환함
+reversed_list = ids[::-1]
+
+Fibonacci_sequence = [0, 1]
+while len(Fibonacci_sequence) < 10:
+    next_number = Fibonacci_sequence[-1] + Fibonacci_sequence[-2]
+    Fibonacci_sequence.append(next_number)
+
+def Fibonaccie(seq):
+    for i in range(2, 10):
+        seq.append(seq[i-1] + seq[i-2])
+    return seq
+
+l = []
+for i in range(10, 0, -1): # 0전까지
+    l.append(i)
+print(l)
+
+sqaures = [val**2 for val in range(1, 11)]
+sqaures
+
+Case-insensitive는 문자의 대 소문자 구분이 없다 .lower()
+sensitive가 구분있는 것
+
+def areElementsPresent(X, Y): # not in 이 True인지 잘 보기
+    for element in X:
+        if element not in Y:
+            return False
+    return True
+
+
+def sumofDigits(i):
+    string_int = str(i)
+    result_2 = 0
+    for i in range(len(string_int)):
+        result_2 += int(string_int[i])
+    return result_2
+
+def sumOfDigits(integer):
+    i_str = str(integer)
+    result = 0
+    for n in i_str:
+        result += int(n)
+    return result
+    
+
+test_two = str(123)
+print(list(test_two)) # 각각 저장된다.
+char_list = [char for char in test_two]
+print(char_list)  
+
+num = list(range(1, 10, 3)) >> list 꼭써야댐
