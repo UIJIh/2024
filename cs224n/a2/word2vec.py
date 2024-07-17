@@ -30,7 +30,7 @@ def naiveSoftmaxLossAndGradient(
     outsideVectors,
     dataset
 ):
-    """ Naive Softmax loss & gradient function for word2vec models
+    """ Naive Softmax loss & gradient function for word2vec models >>>>>>>>>>>> P(O|C)
 
     Implement the naive softmax loss and gradients between a center word's 
     embedding and an outside word's embedding. This will be the building block
@@ -60,31 +60,26 @@ def naiveSoftmaxLossAndGradient(
     """
 
     ### YOUR CODE HERE (~6-8 Lines)
-    ####################################################################################### 1. scores (dot product)
-    scores = np.dot(outsideVectors, centerWordVec) # (v,)
-    ####################################################################################### 2. softmax (probabilities)
-    y_hat = softmax(scores)
-    ####################################################################################### 3. loss (cross entropy, nll)    
-    loss = -np.log(y_hat[outsideWordIdx]) # -np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size
-    ####################################################################################### 4. softmax /w loss의 미분은 걍 error
-    d_scores = y_hat.copy()
-    d_scores[outsideWordIdx] -= 1
-    ####################################################################################### 5. softmax /w loss의 미분은 걍 error
-    print(centerWordVec.shape)
-    print(outsideVectors.shape)
-    print(d_scores.shape)
-    gradCenterVec = np.dot(outsideVectors.T, d_scores)
-    ####################################################################################### 6.
-    gradOutsideVecs = np.dot(np.expand_dims(d_scores,axis=1),np.expand_dims(centerWordVec,axis=0))
-    ####################################################################################### 7.
+    #### 1. scores (dot product)
+    scores = np.dot(outsideVectors, centerWordVec) # (#vocab, word vector length) dot (word vector length,) -> (#vocab,)
 
+    #### 2. softmax (probabilities)
+    y_hat = softmax(scores) # (v,)
 
-    ### Please use the provided softmax function (imported earlier in this file)
-    ### This numerically stable implementation helps you avoid issues pertaining
-    ### to integer overflow. 
+    #### 3. loss (cross entropy, nll)    
+    loss = -np.log(y_hat[outsideWordIdx]) # scalar (-np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size)
 
-    ### END YOUR CODE
+    #### 4. softmax /w loss의 미분은 걍 error
+    d_scores = y_hat.copy() # (v,)
+    d_scores[outsideWordIdx] -= 1 
 
+    #### 5. centervec back = d_score / d_centerWord 
+    gradCenterVec = np.dot(outsideVectors.T, d_scores) # (word vector length, #vocab) dot (#vocab,) -> (word vector length,)
+
+    #### 6. outsidevec back 
+    gradOutsideVecs = np.outer(d_scores, centerWordVec) # (#vocab, word vector length)이 나와야 함
+                                                        # (#vocab,) outer (word vector length,) -> (#vocab, word vector length)
+                                                        # == d_scores[:, None] * centerWordVec[None, :]
     return loss, gradCenterVec, gradOutsideVecs
 
 
@@ -127,13 +122,49 @@ def negSamplingLossAndGradient(
     indices = [outsideWordIdx] + negSampleWordIndices
 
     ### YOUR CODE HERE (~10 Lines)
+    # gradOutsideVecs = np.zeros_like(outsideVectors)
+    # gradCenterVec = np.zeros_like(centerWordVec)
+    
+    # # Positive sample
+    # score_pos = np.dot(outsideVectors[outsideWordIdx], centerWordVec)
+    # ### sigmoid /w loss
+    # y_hat_pos = sigmoid(score_pos)
+    # loss = -np.log(y_hat_pos)
+    # ### grad
+    # gradCenterVec += (y_hat_pos - 1) * outsideVectors[outsideWordIdx]
+    # gradOutsideVecs[outsideWordIdx] += (y_hat_pos - 1) * centerWordVec
 
-    ### Please use your implementation of sigmoid in here.
+    # # Negative samples
+    # scores_neg = np.dot(outsideVectors[negSampleWordIndices], centerWordVec)
+    # y_hat_neg = sigmoid(-scores_neg)  # Note the negative sign here
+    # loss -= np.sum(np.log(y_hat_neg))    
+    # gradCenterVec += np.dot((1 - y_hat_neg), outsideVectors[negSampleWordIndices]) # -
+    
+    # for i, neg_idx in enumerate(negSampleWordIndices):
+    #     gradOutsideVecs[neg_idx] += (1 - y_hat_neg[i]) * centerWordVec
 
-    ### END YOUR CODE
+    # return loss, gradCenterVec, gradOutsideVecs
 
+    ########################################################################### indices(pos+neg)를 이용해야 간결하게 표현 가능!
+    # FORWARD
+    labels = np.array([1] + [-1] * K) # 정답은 1, neg는 -1로 labeling
+    vecs = outsideVectors[indices]     
+    scores = np.dot(vecs, centerWordVec) * labels # samples랑 center 점수 구해서 label 값 곱해줌
+                                                  # (sigmoid에서 negsam에 - 곱해줘야돼서)
+    y_hat = sigmoid(scores) # sigmoid    
+    loss = -np.sum(np.log(y_hat)) # loss
+
+    # BACKWARD
+    d_scores = labels * (y_hat - 1) # y_hat - y    
+    gradCenterVec = np.dot(d_scores, vecs)
+
+    gradOutsideVecs = np.zeros_like(outsideVectors)
+    # np.add.at(gradOutsideVecs, indices, np.outer(d_scores, centerWordVec)) 맨뒤에껄 첫번째의 중간번째에 더해줌
+    # (#vocab,) outer (word vector length,) -> (#vocab, word vector length)
+    for i, idx in enumerate(indices):
+        gradOutsideVecs[idx] += d_scores[i] * centerWordVec
+    
     return loss, gradCenterVec, gradOutsideVecs
-
 
 def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
              centerWordVectors, outsideVectors, dataset,
@@ -171,13 +202,22 @@ def skipgram(currentCenterWord, windowSize, outsideWords, word2Ind,
     """
 
     loss = 0.0
-    gradCenterVecs = np.zeros(centerWordVectors.shape)
-    gradOutsideVectors = np.zeros(outsideVectors.shape)
+    gradCenterVecs = np.zeros(centerWordVectors.shape) # (num words in vocab, word vector length) 
+    gradOutsideVectors = np.zeros(outsideVectors.shape) # (num words in vocab, word vector length)
 
     ### YOUR CODE HERE (~8 Lines)
+    # 1. Prepare current center word
+    center_idx = word2Ind[currentCenterWord]
+    center_word_embed = centerWordVectors[center_idx] # 1개의 center
 
-    ### END YOUR CODE
-    
+    # 2. negSamplingLossAndGradient(centerWordVec, outsideWordIdx, outsideVectors, dataset, K=10)
+    for outsideword in outsideWords:
+        out_idx = word2Ind[outsideword]
+        s_loss, gradCenterVec, gradOutsideVecs = word2vecLossAndGradient(center_word_embed, out_idx, outsideVectors, dataset)
+        loss += s_loss
+        gradCenterVecs[center_idx] += gradCenterVec # center 1개에 대해
+        gradOutsideVectors += gradOutsideVecs # 이미 shape 같음
+ 
     return loss, gradCenterVecs, gradOutsideVectors
 
 

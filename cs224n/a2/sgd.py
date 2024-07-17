@@ -74,7 +74,7 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
     else:
         start_iter = 0
 
-    x = x0
+    x = x0 # SGD 시작점
 
     if not postprocessing:
         postprocessing = lambda x: x
@@ -85,9 +85,17 @@ def sgd(f, x0, step, iterations, postprocessing=None, useSaved=False,
         # You might want to print the progress every few iterations.
 
         loss = None
-        ### YOUR CODE HERE (~2 lines)
 
-        ### END YOUR CODE
+        ### YOUR CODE HERE (~2 lines)
+        '''
+        f -- the function to optimize, it should take a single
+        argument and yield two outputs, a loss and the gradient
+        with respect to the arguments
+        x0 -- the initial point to start SGD from
+        step -- the step size for SGD
+        '''
+        loss, dx = f(x) # gradient of SGD
+        x -= step * dx
 
         x = postprocessing(x)
         if iter % PRINT_EVERY == 0:
